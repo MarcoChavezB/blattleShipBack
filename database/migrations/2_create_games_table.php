@@ -14,14 +14,14 @@ return new class extends Migration
     public function up()
     {
 
-// GAMES
-// CODE - STATUS(QUEUE - PLAYING - FINISHED) - PLAYER1_ID - PLAYER2_ID - WINNER_ID 
+        // GAMES
+        // CODE - STATUS(QUEUE - PLAYING - FINISHED) - PLAYER1_ID - PLAYER2_ID - WINNER_ID 
         Schema::create('games', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
             $table->enum('status', ['queue', 'playing', 'finished'])->default('queue');
-            $table->bigInteger('player1_id');
-            $table->bigInteger('player2_id')->nullable();
+            $table->unsignedBigInteger('player1_id');
+            $table->unsignedBigInteger('player2_id')->nullable();
             $table->bigInteger('winner_id')->nullable();
 
             $table->foreign('player1_id')->references('id')->on('users')->onDelete('cascade');
