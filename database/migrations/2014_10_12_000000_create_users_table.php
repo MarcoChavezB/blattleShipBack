@@ -24,8 +24,6 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
 
-            $table->bigInteger('game_id')->nullable();
-            $table->foreign('game_id')->references('id')->on('games')->onDelete('cascade');
         });
     }
 

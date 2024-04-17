@@ -14,8 +14,6 @@ return new class extends Migration
     public function up()
     {
 
-// GAMES
-// CODE - STATUS(QUEUE - PLAYING - FINISHED) - PLAYER1_ID - PLAYER2_ID - WINNER_ID 
         Schema::create('games', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
@@ -24,8 +22,10 @@ return new class extends Migration
             $table->bigInteger('player2_id')->nullable();
             $table->bigInteger('winner_id')->nullable();
 
-            $table->foreign('player1_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('player2_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('player1_id')->references('id')->on('users');
+            $table->foreign('player2_id')->references('id')->on('users');
+            $table->foreign('winner_id')->references('id')->on('users');
+
         });
     }
 
