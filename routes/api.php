@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Events\TestEvent;
+use App\Http\Controllers\GameController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -33,12 +34,10 @@ route::prefix('auth')->group(function(){
     Route::post('/logout', [UserController::class, 'logout']);
 });
 
-
-route::post('/event', function(){
-    event(new shoot('mensaje enviado'));
-    return response()->json([
-        "msg" => "mensaje enviado"
-    ]);
+Route::prefix('game')->group(function(){
+    Route::post('/queue', [GameController::class, 'queueGame']);
+    Route::put('/join/random', [GameController::class, 'joinRandomGame']);
+    Route::put('/end', [GameController::class, 'endGame']);
+    Route::post('/dequeue', [GameController::class, 'dequeueGame']);
+    Route::post('/cancel/random', [GameController::class, 'cancelRandomQueue']);
 });
-
-
