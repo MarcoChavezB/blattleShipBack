@@ -22,12 +22,12 @@ class TestEvent implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new channel('lolchannel');
+        return new channel('lol');
     }
 
     public function broadcastAs()
     {
-        return 'lolevent';
+        return 'lol';
     }
 
 }
