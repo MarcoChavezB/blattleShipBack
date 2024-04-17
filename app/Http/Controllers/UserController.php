@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     function login(Request $reques){
         $validate = Validator::make($reques->all(), [
-            'email' => 'required|email|min:6|max:255',
+            'email' => 'required|email|min:3|max:255',
             'password' => 'required|min:6|max:255'
         ], [
             'email.required' => 'Email is required',
@@ -47,7 +47,7 @@ class UserController extends Controller
 
     function register(Request $request){
         $validate = Validator::make($request->all(), [
-            'name' => 'required|min:6|max:255',
+            'name' => 'required|min:3|max:255',
             'email' => 'required|email|min:6|max:255|unique:users',
             'password' => 'required|min:6|max:255'
         ], [
