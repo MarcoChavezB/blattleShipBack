@@ -13,9 +13,6 @@ return new class extends Migration
      */
     public function up()
     {
-
-        // GAMES
-        // CODE - STATUS(QUEUE - PLAYING - FINISHED) - PLAYER1_ID - PLAYER2_ID - WINNER_ID 
         Schema::create('games', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
