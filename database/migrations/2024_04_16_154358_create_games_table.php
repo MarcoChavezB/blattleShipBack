@@ -18,9 +18,9 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->enum('status', ['queue', 'playing', 'finished'])->default('queue');
-            $table->bigInteger('player1_id');
-            $table->bigInteger('player2_id')->nullable();
-            $table->bigInteger('winner_id')->nullable();
+            $table->unsignedBigInteger('player1_id');
+            $table->unsignedBigInteger('player2_id')->nullable();
+            $table->unsignedBigInteger('winner_id')->nullable();
 
             $table->foreign('player1_id')->references('id')->on('users');
             $table->foreign('player2_id')->references('id')->on('users');
