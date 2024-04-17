@@ -13,16 +13,19 @@ return new class extends Migration
      */
     public function up()
     {
+
         Schema::create('games', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
             $table->enum('status', ['queue', 'playing', 'finished'])->default('queue');
             $table->unsignedBigInteger('player1_id');
             $table->unsignedBigInteger('player2_id')->nullable();
-            $table->bigInteger('winner_id')->nullable();
+            $table->unsignedBigInteger('winner_id')->nullable();
 
-            $table->foreign('player1_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('player2_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('player1_id')->references('id')->on('users');
+            $table->foreign('player2_id')->references('id')->on('users');
+            $table->foreign('winner_id')->references('id')->on('users');
+
         });
     }
 
