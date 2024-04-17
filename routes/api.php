@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\shoot;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,8 +26,19 @@ Route::post('/sendevent', function(){
     return response()->json(['success' => true]);
 });
 
+
 route::prefix('auth')->group(function(){
     Route::post('/login', [UserController::class, 'login']);
     Route::post('/register', [UserController::class, 'register']);
     Route::post('/logout', [UserController::class, 'logout']);
 });
+
+
+route::post('/event', function(){
+    event(new shoot('mensaje enviado'));
+    return response()->json([
+        "msg" => "mensaje enviado"
+    ]);
+});
+
+
