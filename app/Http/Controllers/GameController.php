@@ -87,13 +87,14 @@ class GameController extends Controller
         $random_game->status = 'playing';
         $random_game->save();
 
-        try {
+        Cache::put('game_found', ['gameId' => $random_game->id, 'players' => [$random_game->player1_id, $random_game->player2_id]], 5);
+        /*try {
             event(new TestEvent(['gameId' => $random_game->id, 'players' => [$random_game->player1_id, $random_game->player2_id]]));
             Log::info('El evento TestEvent se ha enviado correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al emitir el evento TestEvent: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()]);
-        }
+        }*/
 
         return response()->json([
             'game_found' => true,
@@ -101,7 +102,29 @@ class GameController extends Controller
             'players' => [$random_game->player1_id, $random_game->player2_id],
             'turn' => $random_game->player1_id,
             'gameId' => $random_game->id,
+            'debug' => Cache::get('game_found'),
         ]);
+    }
+
+    public function startGame(){
+        header("X-Accel-Buffering: no");
+        header("Content-Type: text/event-stream");
+        header("Cache-Control: no-cache");
+        header("Connection: keep-alive");
+        header('Access-Control-Allow-Origin: *');
+
+        if (Cache::has('game_found')) {
+            $game = Cache::get('game_found');
+            echo "event: game_found\n",
+                "data: " . json_encode($game) . "\n\n";
+        } else {
+            echo ""."\n\n";
+        }
+
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        flush();
     }
 
     public function endGame(Request $request){
