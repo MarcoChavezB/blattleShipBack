@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function(){
         Route::post('/dequeue', [GameController::class, 'dequeueGame']);
         Route::post('/cancel/random', [GameController::class, 'cancelRandomQueue']);
         Route::post('/send/board', [GameController::class, 'sendBoard']);
+        Route::get('/history', [GameController::class, 'myGameHistory']);
     });
 });
 

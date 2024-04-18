@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class GameController extends Controller
 {
-    public function queueGame(Request $request){
-
+    public function queueGame(){
         $player1_id = Auth::user()->id;
 
         $existingGame = game::where('player1_id', $player1_id)
@@ -102,25 +101,41 @@ class GameController extends Controller
         ]);
     }
 
-    public function myGameHistory(Request $request){
-        $player_id = Auth::user()->id;
+public function myGameHistory(Request $request){
+    $player_id = Auth::user()->id;
 
-        $games = game::where('player1_id', $player_id)
-            ->orWhere('player2_id', $player_id)
-            ->get();
+    $games = Game::with(['player2']) // Carga la relación player2
+        ->where('player1_id', $player_id)
+        ->orWhere('player2_id', $player_id)
+        ->get();
 
-        if ($games->count() == 0){
-            return response()->json([
-                'msg' => 'No games found',
-                'games' => [],
-            ]);
-        }
-
+    if ($games->isEmpty()){
         return response()->json([
-            'msg' => 'Game history retrieved successfully',
-            'games' => $games,
+            'msg' => 'No games found',
+            'games' => [],
         ]);
     }
+
+    // Transforma la colección de juegos para reemplazar el ID del jugador 2 con su nombre
+    $transformedGames = $games->map(function ($game) {
+        $player2Name = $game->player2 ? $game->player2->name : null;
+        return [
+            'id' => $game->id,
+            'created_at' => $game->created_at,
+            'updated_at' => $game->updated_at,
+            'status' => $game->status,
+            'player1_id' => $game->player1_id,
+            'player2_name' => $player2Name, // Nombre del jugador 2 en lugar de su ID
+            'winner_id' => $game->winner_id
+        ];
+    });
+
+    return response()->json([
+        'msg' => 'Game history retrieved successfully',
+        'games' => $transformedGames,
+    ]);
+}
+
 
     public function dequeueGame(Request $request){
         $validator = Validator::make($request->all(), [
