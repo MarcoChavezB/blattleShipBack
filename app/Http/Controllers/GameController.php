@@ -91,6 +91,7 @@ class GameController extends Controller
 
     public function endGame(Request $request){
         $validator = Validator::make($request->all(), [
+            'winner_id' => 'required|integer|exists:users,id',
             'gameId' => 'required|integer|exists:games,id',
 
         ]);
@@ -100,7 +101,7 @@ class GameController extends Controller
         }
 
         $game_id = $request->game_id;
-        $winner_id = Auth::user()->id;
+        $winner_id = $request->winner_id;
 
         $game = game::find($game_id);
         $game->status = 'finished';
@@ -110,6 +111,7 @@ class GameController extends Controller
         return response()->json([
             'msg' => 'Game ended successfully',
             'game_id' => $game->id,
+            'winner_id' => $game->winner_id,
         ]);
     }
 
