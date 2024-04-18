@@ -11,16 +11,8 @@ use Illuminate\Support\Facades\Validator;
 class GameController extends Controller
 {
     public function queueGame(Request $request){
-        $validator = Validator::make($request->all(), [
-            'player1_id' => 'required|integer|exists:users,id',
-        ]);
 
-        if ($validator->fails()) {
-            return response()->json(["errors" => $validator->errors()], 400);
-        }
-
-        $player1_id = $request->player1_id;
-        //$player1_id = Auth::user()->id;
+        $player1_id = Auth::user()->id;
 
         $existingGame = game::where('player1_id', $player1_id)
             ->whereIn('status', ['playing', 'queue'])
@@ -43,16 +35,7 @@ class GameController extends Controller
     }
 
     public function cancelRandomQueue(Request $request){
-        $validator = Validator::make($request->all(), [
-            'player_id' => 'required|integer|exists:users,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(["errors" => $validator->errors()], 400);
-        }
-
-        $player_id = $request->player_id;
-        //$player_id = Auth::user()->id;
+        $player_id = Auth::user()->id;
 
         Cache::put($player_id, 'cancelled', 1);
 
@@ -62,16 +45,7 @@ class GameController extends Controller
     }
 
     public function joinRandomGame(Request $request){
-        $validator = Validator::make($request->all(), [
-            'player2_id' => 'required|integer|exists:users,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(["errors" => $validator->errors()], 400);
-        }
-
-        $player2_id = $request->player2_id;
-        //$player2_id = Auth::user()->id;
+        $player2_id = Auth::user()->id;
 
         $existingGame = game::where('player2_id', $player2_id)
             ->orWhere('player1_id', $player2_id)
@@ -106,7 +80,6 @@ class GameController extends Controller
 
     public function endGame(Request $request){
         $validator = Validator::make($request->all(), [
-            'winner_id' => 'required|integer|exists:users,id',
             'gameId' => 'required|integer|exists:games,id',
 
         ]);
@@ -116,8 +89,7 @@ class GameController extends Controller
         }
 
         $game_id = $request->game_id;
-        $winner_id = $request->winner_id;
-        //$winnder_id = Auth::user()->id;
+        $winner_id = Auth::user()->id;
 
         $game = game::find($game_id);
         $game->status = 'finished';
@@ -131,16 +103,7 @@ class GameController extends Controller
     }
 
     public function myGameHistory(Request $request){
-        $validator = Validator::make($request->all(), [
-            'player_id' => 'required|integer|exists:users,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(["errors" => $validator->errors()], 400);
-        }
-
-        $player_id = $request->player_id;
-        //$player_id = Auth::user()->id;
+        $player_id = Auth::user()->id;
 
         $games = game::where('player1_id', $player_id)
             ->orWhere('player2_id', $player_id)
@@ -172,12 +135,35 @@ class GameController extends Controller
         //$player_id = Auth::user()->id;
 
         $game = game::find($gameId);
+        if ($game->status != 'queue'){
+            return response()->json([
+                'msg' => 'Game is not in queue',
+            ], 400);
+        }
         $game->delete();
 
         return response()->json([
             'msg' => 'Game unqueued successfully',
             'game_id' => $game->id,
         ]);
+    }
+
+    public function sendBoard(Request $request){
+        $validator = Validator::make($request->all(), [
+            'gameId' => 'required|integer|exists:games,id',
+            'board' => 'required|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(["errors" => $validator->errors()], 400);
+        }
+
+        if ($request->gameId != 'playing'){
+            return response()->json([
+                'msg' => 'Game is not in progress',
+            ], 400);
+        }
+
     }
 
 }

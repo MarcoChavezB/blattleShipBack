@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CodeVerification;
 use App\Models\EmailVerificationToken;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class EmailVerificationController extends Controller
 {
@@ -28,11 +31,11 @@ class EmailVerificationController extends Controller
 
         $userToken->delete();
 
-        $user->is_verified = true;
-        $user->email_verified_at = now();
-        $user->save();
+            $user->is_verified = true;
+            $user->email_verified_at = now();
+            $user->save();
 
-        return view('emails.EmailVerificationSuccessView');
+            return view('emails.EmailVerificationSuccessView');
 
-    }
+        }
 }

@@ -23,24 +23,37 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
 Route::post('/sendevent', function(){
     event(new TestEvent(['msg' => 'Hello World']));
     return response()->json(['success' => true]);
 });
 
-
-route::prefix('auth')->group(function(){
+Route::prefix('user')->group(function(){
     Route::post('/login', [UserController::class, 'login']);
     Route::post('/register', [UserController::class, 'register']);
-    Route::post('/logout', [UserController::class, 'logout']);
 });
 
-Route::prefix('game')->group(function(){
-    Route::post('/queue', [GameController::class, 'queueGame']);
-    Route::put('/join/random', [GameController::class, 'joinRandomGame']);
-    Route::put('/end', [GameController::class, 'endGame']);
-    Route::post('/dequeue', [GameController::class, 'dequeueGame']);
-    Route::post('/cancel/random', [GameController::class, 'cancelRandomQueue']);
+
+Route::middleware('auth:sanctum')->group(function(){
+    Route::get('/authenticatetoken', function () {
+        return response()->json([
+            'status' => true
+        ]);
+    });
+
+    route::prefix('user')->group(function(){
+        Route::post('/logout', [UserController::class, 'logout']);
+    });
+
+    Route::prefix('game')->group(function(){
+        Route::post('/queue', [GameController::class, 'queueGame']);
+        Route::put('/join/random', [GameController::class, 'joinRandomGame']);
+        Route::put('/end', [GameController::class, 'endGame']);
+        Route::post('/dequeue', [GameController::class, 'dequeueGame']);
+        Route::post('/cancel/random', [GameController::class, 'cancelRandomQueue']);
+        Route::post('/send/board', [GameController::class, 'sendBoard']);
+    });
 });
 
 
