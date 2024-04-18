@@ -58,7 +58,6 @@ Route::middleware('auth:sanctum')->group(function(){
     });
 });
 
-
 Route::post('/shoot', function(){
     event(new shoot("se ha disparado"));
     return response()->json(['success' => true]);
