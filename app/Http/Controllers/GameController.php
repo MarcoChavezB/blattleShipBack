@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\StartGame;
+
 use App\Events\TestEvent;
+use App\Events\NotifyEvent;
+use App\Events\AlertWinner;
+use App\Events\AlertEvent;
 use App\Models\game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +17,17 @@ use PHPUnit\Util\Test;
 
 class GameController extends Controller
 {
+
+
+    function sendNotify(Request $request){
+        $player_id = Auth::user()->id;
+
+        event(new AlertEvent("Se destruyo un barco rival!", $player_id));
+        return response()->json([
+            'msg' => 'Notification sent successfully',
+        ]);
+    }
+   
     public function queueGame(){
         $player1_id = Auth::user()->id;
 
@@ -86,6 +100,7 @@ class GameController extends Controller
             'game_found' => true,
             'msg' => 'Game started successfully',
             'players' => [$random_game->player1_id, $random_game->player2_id],
+            'turn' => $random_game->player1_id,
             'gameId' => $random_game->id,
             'debug' => Cache::get('game_found'),
         ]);
@@ -136,6 +151,7 @@ class GameController extends Controller
         }
 
         $game->save();
+        event(new AlertWinner('Felicidades Ganaste el juego!', $game->winner_id));
 
         return response()->json([
             'msg' => 'Game ended successfully',
@@ -217,12 +233,16 @@ class GameController extends Controller
             return response()->json(["errors" => $validator->errors()], 400);
         }
 
-        if ($request->gameId != 'playing'){
+        $game = game::find($request->gameId);
+        if($game->status != 'playing'){
             return response()->json([
                 'msg' => 'Game is not in progress',
             ], 400);
         }
 
-    }
+        $turn = $request->turn;
+        $newTurn = ($turn == 1) ? 2 : 1;
 
+        event(new NotifyEvent($newTurn, $request->board));
+    }
 }
