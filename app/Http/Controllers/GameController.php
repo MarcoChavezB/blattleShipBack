@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\StartGame;
+use App\Events\TestEvent;
 use App\Models\game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
+use PHPUnit\Util\Test;
 
 class GameController extends Controller
 {
@@ -70,6 +73,7 @@ class GameController extends Controller
         $random_game->status = 'playing';
         $random_game->save();
 
+        event(new TestEvent(['gameId' => $random_game->id, 'players' => [$random_game->player1_id, $random_game->player2_id]]));
         return response()->json([
             'game_found' => true,
             'msg' => 'Game started successfully',
