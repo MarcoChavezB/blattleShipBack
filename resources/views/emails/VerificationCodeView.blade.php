@@ -52,19 +52,12 @@
             letter-spacing: 8px;
 
         }
-
-        .logo {
-            height: 30vh;
-            width: 30vh;
-            background-size: 150%;
-        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>¡My Little Assistant!</h2>
     <p>Por favor ingrese este código en la aplicación.</p>
-    <p>Este código es válido por 5 min y es de uso único.</p>
+    <p>Este código es válido por 5 minutos y es de uso único.</p>
     <a><h1 class="code" >{{$code}}</h1></a>
 </div>
 </body>
