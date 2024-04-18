@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\NotifyEvent;
 use App\Events\shoot;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -40,4 +41,16 @@ Route::prefix('game')->group(function(){
     Route::put('/end', [GameController::class, 'endGame']);
     Route::post('/dequeue', [GameController::class, 'dequeueGame']);
     Route::post('/cancel/random', [GameController::class, 'cancelRandomQueue']);
+});
+
+
+Route::post('/shoot', function(){
+    event(new shoot("se ha disparado"));
+    return response()->json(['success' => true]);
+});
+
+
+Route::post('/notify', function(){
+    event(new NotifyEvent("notificacion"));
+    return response()->json(['success' => true]);
 });

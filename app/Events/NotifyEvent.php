@@ -6,7 +6,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class shoot implements ShouldBroadcast
+class NotifyEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
     public $message;
@@ -29,11 +29,11 @@ class shoot implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new Channel('shoot');
+        return new Channel('notify');
     }
 
     public function broadcastAs()
     {
-        return '.shoot.event';
+        return 'Notify.event';
     }    
 }
