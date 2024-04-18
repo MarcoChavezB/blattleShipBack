@@ -91,9 +91,8 @@ class GameController extends Controller
 
     public function endGame(Request $request){
         $validator = Validator::make($request->all(), [
-            'winner_id' => 'required|integer|exists:users,id',
+            'losser_id' => 'required|integer|exists:users,id',
             'gameId' => 'required|integer|exists:games,id',
-
         ]);
 
         if ($validator->fails()) {
@@ -101,11 +100,18 @@ class GameController extends Controller
         }
 
         $game_id = $request->game_id;
-        $winner_id = $request->winner_id;
+        $losser_id = $request->losser_id;
 
         $game = game::find($game_id);
         $game->status = 'finished';
-        $game->winner_id = $winner_id;
+
+        if ($game->player1_id == $losser_id) {
+            $game->winner_id = $game->player2_id;
+        }
+        else if ($game->player2_id == $losser_id) {
+            $game->winner_id = $game->player1_id;
+        }
+
         $game->save();
 
         return response()->json([
@@ -115,7 +121,8 @@ class GameController extends Controller
         ]);
     }
 
-public function myGameHistory(Request $request){
+
+    public function myGameHistory(Request $request){
     $player_id = Auth::user()->id;
 
     $games = Game::with(['player2']) // Carga la relación player2
