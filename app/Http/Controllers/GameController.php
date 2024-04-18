@@ -114,7 +114,7 @@ class GameController extends Controller
             return response()->json(["errors" => $validator->errors()], 400);
         }
 
-        $game_id = $request->game_id;
+        $game_id = $request->gameId;
         $losser_id = $request->losser_id;
 
         $game = game::find($game_id);
