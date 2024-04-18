@@ -10,6 +10,7 @@ use App\Models\game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use PHPUnit\Util\Test;
 
@@ -85,7 +86,14 @@ class GameController extends Controller
         $random_game->status = 'playing';
         $random_game->save();
 
-        event(new TestEvent(['gameId' => $random_game->id, 'players' => [$random_game->player1_id, $random_game->player2_id]]));
+        try {
+            event(new TestEvent(['gameId' => $random_game->id, 'players' => [$random_game->player1_id, $random_game->player2_id]]));
+            Log::info('El evento TestEvent se ha enviado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al emitir el evento TestEvent: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()]);
+        }
+
         return response()->json([
             'game_found' => true,
             'msg' => 'Game started successfully',
@@ -97,6 +105,7 @@ class GameController extends Controller
 
     public function endGame(Request $request){
         $validator = Validator::make($request->all(), [
+            'winner_id' => 'required|integer|exists:users,id',
             'gameId' => 'required|integer|exists:games,id',
         ]);
 
@@ -105,7 +114,7 @@ class GameController extends Controller
         }
 
         $game_id = $request->game_id;
-        $winner_id = Auth::user()->id;
+        $winner_id = $request->winner_id;
 
         $game = game::find($game_id);
         $game->status = 'finished';
@@ -115,6 +124,7 @@ class GameController extends Controller
         return response()->json([
             'msg' => 'Game ended successfully',
             'game_id' => $game->id,
+            'winner_id' => $game->winner_id,
         ]);
     }
 

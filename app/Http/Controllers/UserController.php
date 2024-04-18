@@ -87,7 +87,7 @@ class UserController extends Controller
     }
 
     function register(Request $request){
-        $validate = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'name' => 'required|min:3|max:255',
             'email' => 'required|email|min:6|max:255|unique:users',
             'password' => 'required|min:6|max:255'
@@ -105,11 +105,8 @@ class UserController extends Controller
             'password.max' => 'La contraseña es muy larga'
         ]);
 
-        if($validate->fails()){
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+        if ($validator->fails()) {
+            return response()->json(["errors" => $validator->errors()], 400);
         }
 
         $user = new User();
