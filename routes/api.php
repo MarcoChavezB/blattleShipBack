@@ -23,8 +23,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/game/start', [GameController::class, 'startGame']);
-
 
 
 Route::post('/sendevent', function(){

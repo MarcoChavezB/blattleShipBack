@@ -11,6 +11,7 @@ use App\Models\game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use PHPUnit\Util\Test;
@@ -27,7 +28,7 @@ class GameController extends Controller
             'msg' => 'Notification sent successfully',
         ]);
     }
-   
+
     public function queueGame(){
         $player1_id = Auth::user()->id;
 
@@ -64,12 +65,15 @@ class GameController extends Controller
     public function joinRandomGame(Request $request){
         $player2_id = Auth::user()->id;
 
-        $existingGame = game::where('player2_id', $player2_id)
-            ->orWhere('player1_id', $player2_id)
+        $existingGameAsPlayerOne = game::where('player1_id', $player2_id)
             ->whereIn('status', ['playing', 'queue'])
             ->first();
 
-        if ($existingGame) {
+        $existingGameAsPlayerTwo = game::where('player2_id', $player2_id)
+            ->whereIn('status', ['playing', 'queue'])
+            ->first();
+
+        if ($existingGameAsPlayerTwo || $existingGameAsPlayerOne) {
             return response()->json([
                 'msg' => 'You already have a game in progress or in queue. Please finish it before starting a new one.',
             ], 400);
@@ -87,14 +91,13 @@ class GameController extends Controller
         $random_game->status = 'playing';
         $random_game->save();
 
-        Cache::put('game_found', ['gameId' => $random_game->id, 'players' => [$random_game->player1_id, $random_game->player2_id]], 5);
-        /*try {
+        try {
             event(new TestEvent(['gameId' => $random_game->id, 'players' => [$random_game->player1_id, $random_game->player2_id]]));
             Log::info('El evento TestEvent se ha enviado correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al emitir el evento TestEvent: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()]);
-        }*/
+        }
 
         return response()->json([
             'game_found' => true,
@@ -102,29 +105,7 @@ class GameController extends Controller
             'players' => [$random_game->player1_id, $random_game->player2_id],
             'turn' => $random_game->player1_id,
             'gameId' => $random_game->id,
-            'debug' => Cache::get('game_found'),
         ]);
-    }
-
-    public function startGame(){
-        header("X-Accel-Buffering: no");
-        header("Content-Type: text/event-stream");
-        header("Cache-Control: no-cache");
-        header("Connection: keep-alive");
-        header('Access-Control-Allow-Origin: *');
-
-        if (Cache::has('game_found')) {
-            $game = Cache::get('game_found');
-            echo "event: game_found\n",
-                "data: " . json_encode($game) . "\n\n";
-        } else {
-            echo ""."\n\n";
-        }
-
-        while (ob_get_level() > 0) {
-            ob_end_flush();
-        }
-        flush();
     }
 
     public function endGame(Request $request){
@@ -134,7 +115,7 @@ class GameController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(["errors" => $validator->errors()], 400);
+            return response()->json(["errors    " => $validator->errors()], 400);
         }
 
         $game_id = $request->gameId;
@@ -160,41 +141,36 @@ class GameController extends Controller
         ]);
     }
 
-
     public function myGameHistory(Request $request){
-    $player_id = Auth::user()->id;
+        $player_id = Auth::user()->id;
 
-    $games = Game::with(['player2']) // Carga la relación player2
-        ->where('player1_id', $player_id)
-        ->orWhere('player2_id', $player_id)
-        ->get();
+        $games = DB::table('games')
+            ->where('player1_id', $player_id)
+            ->orWhere('player2_id', $player_id)
+            ->join('users as player1', 'games.player1_id', '=', 'player1.id')
+            ->join('users as player2', 'games.player2_id', '=', 'player2.id')
+            ->join('users as winner', 'games.winner_id', '=', 'winner.id')
+            ->select('games.id', 'games.status', 'games.created_at', 'player1.id as player1_id', 'player2.id as player2_id', 'winner.id as winner_id', 'player1.name as player1_name',  'player2.name as player2_name', 'winner.name as winner_name')
+            ->where('status', 'finished')
+            ->get();
 
-    if ($games->isEmpty()){
+        if($games->isEmpty()){
+            return response()->json([
+                'msg' => 'No games found',
+            ], 400);
+        }
+
+        // Agregar player_id a cada objeto del arreglo games
+        foreach ($games as $game) {
+            $game->player_id = $player_id;
+        }
+
         return response()->json([
-            'msg' => 'No games found',
-            'games' => [],
+            'msg' => 'Games found',
+            'games' => $games,
         ]);
     }
 
-    // Transforma la colección de juegos para reemplazar el ID del jugador 2 con su nombre
-    $transformedGames = $games->map(function ($game) {
-        $player2Name = $game->player2 ? $game->player2->name : null;
-        return [
-            'id' => $game->id,
-            'created_at' => $game->created_at,
-            'updated_at' => $game->updated_at,
-            'status' => $game->status,
-            'player1_id' => $game->player1_id,
-            'player2_name' => $player2Name, // Nombre del jugador 2 en lugar de su ID
-            'winner_id' => $game->winner_id
-        ];
-    });
-
-    return response()->json([
-        'msg' => 'Game history retrieved successfully',
-        'games' => $transformedGames,
-    ]);
-}
 
 
     public function dequeueGame(Request $request){
