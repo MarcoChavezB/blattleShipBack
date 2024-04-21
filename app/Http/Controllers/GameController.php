@@ -7,7 +7,7 @@ use App\Events\TestEvent;
 use App\Events\NotifyEvent;
 use App\Events\AlertWinner;
 use App\Events\AlertEvent;
-use App\Models\game;
+use App\Models\Game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -42,7 +42,7 @@ class GameController extends Controller
             ], 400);
         }
 
-        $game = new game();
+        $game = new Game();
         $game->player1_id = $player1_id;
         $game->save();
 
@@ -143,31 +143,24 @@ class GameController extends Controller
 
     public function myGameHistory(Request $request){
         $player_id = Auth::user()->id;
+        $perPage = 5;
 
-        $games = DB::table('games')
-            ->where('player1_id', $player_id)
+        $games = Game::where('player1_id', $player_id)
             ->orWhere('player2_id', $player_id)
             ->join('users as player1', 'games.player1_id', '=', 'player1.id')
             ->join('users as player2', 'games.player2_id', '=', 'player2.id')
             ->join('users as winner', 'games.winner_id', '=', 'winner.id')
             ->select('games.id', 'games.status', 'games.created_at', 'player1.id as player1_id', 'player2.id as player2_id', 'winner.id as winner_id', 'player1.name as player1_name',  'player2.name as player2_name', 'winner.name as winner_name')
             ->where('status', 'finished')
-            ->get();
+            ->paginate($perPage);   
 
-        if($games->isEmpty()){
-            return response()->json([
-                'msg' => 'No games found',
-            ], 400);
-        }
-
-        // Agregar player_id a cada objeto del arreglo games
         foreach ($games as $game) {
             $game->player_id = $player_id;
         }
 
         return response()->json([
-            'msg' => 'Games found',
-            'games' => $games,
+            'page' =>$games->currentPage(),
+            'games' => $games->items(),
         ]);
     }
 
