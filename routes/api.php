@@ -48,12 +48,18 @@ Route::middleware('auth:sanctum')->group(function(){
     });
 
     Route::prefix('game')->group(function(){
+        // Test routes
+        Route::get('/generate/board', [GameController::class, 'generateBoard']);
+        Route::get('/generate/empty/board', [GameController::class, 'generateEmptyBoard']);
+        Route::post('/send/board', [GameController::class, 'sendBoard']);
+        Route::post('/turn/toggle', [GameController::class, 'toggleTurn']);
+
+
         Route::post('/queue', [GameController::class, 'queueGame']);
         Route::put('/join/random', [GameController::class, 'joinRandomGame']);
         Route::put('/end', [GameController::class, 'endGame']);
         Route::post('/dequeue', [GameController::class, 'dequeueGame']);
         Route::post('/cancel/random', [GameController::class, 'cancelRandomQueue']);
-        Route::post('/send/board', [GameController::class, 'sendBoard']);
         Route::get('/history', [GameController::class, 'myGameHistory']);
         Route::post('/notify', [GameController::class, 'sendNotify']);
     });
@@ -69,3 +75,4 @@ Route::post('/notify', function(){
     event(new NotifyEvent("notificacion"));
     return response()->json(['success' => true]);
 });
+

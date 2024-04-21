@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 
 use App\Events\TestEvent;
-use App\Events\NotifyEvent;
+use App\Events\ToggleTurn;
 use App\Events\AlertWinner;
 use App\Events\AlertEvent;
 use App\Models\Game;
@@ -53,18 +53,11 @@ class GameController extends Controller
         return response()->json([
             'msg' => 'Game queued successfully',
             'gameId' => $game->id,
+            'turn' => $game->player1_id,
         ]);
     }
 
-    public function cancelRandomQueue(Request $request){
-        $player_id = Auth::user()->id;
 
-        Cache::put($player_id, 'cancelled', 1);
-
-        return response()->json([
-            'msg' => 'Game search cancelled',
-        ], 200);
-    }
 
     public function joinRandomGame(Request $request){
         $player2_id = Auth::user()->id;
@@ -111,6 +104,17 @@ class GameController extends Controller
             'gameId' => $random_game->id,
         ]);
     }
+
+    public function cancelRandomQueue(Request $request){
+        $player_id = Auth::user()->id;
+
+        Cache::put($player_id, 'cancelled', 1);
+
+        return response()->json([
+            'msg' => 'Game search cancelled',
+        ], 200);
+    }
+
 
     public function endGame(Request $request){
         $validator = Validator::make($request->all(), [
@@ -168,8 +172,6 @@ class GameController extends Controller
         ]);
     }
 
-
-
     public function dequeueGame(Request $request){
         $validator = Validator::make($request->all(), [
             'gameId' => 'required|integer|exists:games,id',
@@ -216,6 +218,75 @@ class GameController extends Controller
         $turn = $request->turn;
         $newTurn = ($turn == 1) ? 2 : 1;
 
-        event(new NotifyEvent($newTurn, $request->board));
+        event(new ToggleTurn($newTurn, $request->board));
+    }
+
+
+    public function generateEmptyBoard(){
+        $arreglo = [];
+        for ($i = 0; $i < 8; $i++) {
+            $fila = [];
+            for ($j = 0; $j < 15; $j++) {
+                $fila[] = 0;
+            }
+            $arreglo[] = $fila;
+        }
+
+        return $arreglo;
+    }
+
+    public function generateBoard()
+    {
+        $arreglo = [];
+        $totalUnos = 0;
+        $numeroBarcos = 15;
+        for ($i = 0; $i < 8; $i++) {
+            $fila = [];
+            for ($j = 0; $j < 15; $j++) {
+                $fila[] = 0;
+            }
+            $arreglo[] = $fila;
+        }
+
+        while ($totalUnos < $numeroBarcos) {
+            $filaAleatoria = rand(0, 7); 
+            $columnaAleatoria = rand(0, 14);
+            if ($arreglo[$filaAleatoria][$columnaAleatoria] == 0) {
+                $arreglo[$filaAleatoria][$columnaAleatoria] = 1;
+                $totalUnos++;
+            }
+        }
+
+        return $arreglo;
+    }
+
+    public function toggleTurn(Request $request){
+        $validator = Validator::make($request->all(), [
+            'gameId' => 'required|integer|exists:games,id',
+            'turn' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(["errors" => $validator->errors()], 400);
+        }
+
+        $game = game::find($request->gameId);
+        if($game->status != 'playing'){
+            return response()->json([
+                'msg' => 'Game is not in progress',
+            ], 400);
+        }
+
+        $player1_id = $game->player1_id;
+        $player2_id = $game->player2_id;
+
+        $newTurn = ($request->turn == $player1_id) ? $player2_id : $player1_id;
+
+        event(new ToggleTurn($newTurn));
+
+        return response()->json([
+            'msg' => 'Turn toggled successfully',
+            'newTurn' => $newTurn,
+        ]);
     }
 }
