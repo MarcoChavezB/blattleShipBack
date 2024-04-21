@@ -30,20 +30,24 @@ class GameController extends Controller
     }
 
     public function queueGame(){
-        $player1_id = Auth::user()->id;
+        $player_id = Auth::user()->id;
 
-        $existingGame = game::where('player1_id', $player1_id)
+        $existingGameAsP1 = game::where('player1_id', $player_id)
             ->whereIn('status', ['playing', 'queue'])
             ->first();
 
-        if ($existingGame) {
+        $existingGameAsP2 = game::where('player2_id', $player_id)
+            ->whereIn('status', ['playing', 'queue'])
+            ->first();
+
+        if ($existingGameAsP1 || $existingGameAsP2) {
             return response()->json([
                 'msg' => 'You already have a game in progress or in queue. Please finish it before starting a new one.',
             ], 400);
         }
 
         $game = new Game();
-        $game->player1_id = $player1_id;
+        $game->player1_id = $player_id;
         $game->save();
 
         return response()->json([
@@ -152,7 +156,7 @@ class GameController extends Controller
             ->join('users as winner', 'games.winner_id', '=', 'winner.id')
             ->select('games.id', 'games.status', 'games.created_at', 'player1.id as player1_id', 'player2.id as player2_id', 'winner.id as winner_id', 'player1.name as player1_name',  'player2.name as player2_name', 'winner.name as winner_name')
             ->where('status', 'finished')
-            ->paginate($perPage);   
+            ->paginate($perPage);
 
         foreach ($games as $game) {
             $game->player_id = $player_id;
